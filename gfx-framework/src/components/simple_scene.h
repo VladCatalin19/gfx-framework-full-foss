@@ -74,5 +74,8 @@ namespace gfxc
         Mesh *xozPlane;
         Mesh *simpleLine;
         Transform *objectModel;
+
+
+        Transform *testTransform;
     };
 }

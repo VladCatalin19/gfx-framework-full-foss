@@ -119,7 +119,8 @@ namespace gfxc
      private:
         virtual void UpdateModelPosition();
 
-     protected:
+     //protected:
+     public:
         glm::mat4               m_worldModel;
 
         // Rotations

@@ -87,7 +87,7 @@ namespace gfxc
         // Other components can be public, as we're not using inheritance
         Transform *     m_transform;
 
-     protected:
+     //protected:
         // Camera Type
         CameraType      m_type;
 

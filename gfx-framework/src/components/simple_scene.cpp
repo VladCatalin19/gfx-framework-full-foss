@@ -1,11 +1,16 @@
 #include "components/simple_scene.h"
 
+#include <cmath>
 #include <vector>
 #include <iostream>
 
 #include "components/camera_input.h"
 #include "components/scene_input.h"
 #include "components/transform.h"
+#include "utils/glm_utils.h"
+
+#include "transform.h"
+#include "transform_wrapper.h"
 
 using namespace gfxc;
 
@@ -108,6 +113,51 @@ void SimpleScene::InitResources()
     // Default rendering mode will use depth buffer
     glDepthMask(GL_TRUE);
     glEnable(GL_DEPTH_TEST);
+
+
+
+    testTransform = new Transform/*Wrapper*/();
+    //std::cout << "------------------------1--------------------------\n";
+    Transform *tParent = new Transform/*Wrapper*/();
+    //std::cout << "------------------------2--------------------------\n";
+    Transform *tChild = new Transform/*Wrapper*/();
+    //std::cout << "------------------------3--------------------------\n";
+
+    testTransform->AddChild(tParent);
+    //std::cout << "------------------------4--------------------------\n";
+    tParent->AddChild(tChild);
+    //std::cout << "------------------------5--------------------------\n";
+
+    testTransform->SetWorldPosition(glm::vec3(0.0F));
+    //std::cout << "------------------------6--------------------------\n";
+    tParent->SetWorldPosition(glm::vec3(1.0F, 0.0F, 1.0F));
+    //std::cout << "------------------------7--------------------------\n";
+    tParent->SetWorldRotation(glm::vec3(0.0F, 45.0F, 0.0F));
+    //std::cout << "------------------------8--------------------------\n";
+
+    tChild->SetLocalPosition(glm::vec3_up);
+    //std::cout << "------------------------9--------------------------\n";
+    tChild->SetReleativeRotation(glm::vec3(0.0F, 45.0F, 0.0F));
+    //std::cout << "-----------------------10--------------------------\n";
+    tChild->SetScale(0.25F * glm::vec3(1.0F));
+    //std::cout << "-----------------------11--------------------------\n";
+
+
+    Mesh *box = new Mesh("Box");
+    box->LoadMesh(PATH_JOIN(window->props.selfDir, RESOURCE_PATH::MODELS, "primitives"), "box.obj");
+    AddMeshToList(box);
+
+    // std::cout << "Parent model:" << std::endl
+    //           << "    " << tParent->GetModel()[0] << std::endl
+    //           << "    " << tParent->GetModel()[1] << std::endl
+    //           << "    " << tParent->GetModel()[2] << std::endl
+    //           << "    " << tParent->GetModel()[3] << std::endl;
+
+    // std::cout << "Child model:" << std::endl
+    //           << "    " << tChild->GetModel()[0] << std::endl
+    //           << "    " << tChild->GetModel()[1] << std::endl
+    //           << "    " << tChild->GetModel()[2] << std::endl
+    //           << "    " << tChild->GetModel()[3] << std::endl;
 }
 
 
@@ -306,9 +356,45 @@ bool SimpleScene::ToggleGroundPlane()
     return drawGroundPlane;
 }
 
+static unsigned frames = 0U;
 
 void SimpleScene::Update(float deltaTimeSeconds)
 {
     ClearScreen();
     DrawCoordinateSystem();
+
+    //camera->m_transform->Move(glm::vec3_down, -deltaTimeSeconds);
+    
+    //camera->UpdateSpeed(10.0F);
+    //camera->m_transform->SetMoveSpeed(10.0F);
+    //std::cout << camera->m_transform->GetMoveSpeed() << std::endl;
+    
+    //std::cout << camera->m_transform->GetLocalOZVector() << std::endl;
+    // my camera local oz : [-0.0016882 0.253758 0.967266]
+
+    Transform *parent = *testTransform->m_childNodes.begin();
+    Transform *child = *parent->m_childNodes.begin();
+
+    static float totalTime = 0.0F;
+    static const glm::vec3 initialParentLocal = parent->GetLocalPosition();
+    static const glm::vec3 initialChildLocal = child->GetLocalPosition();
+
+    totalTime += deltaTimeSeconds;
+
+    parent->SetLocalPosition(initialParentLocal + 0.5F * std::sin(totalTime * 5.0F) * glm::vec3_right);
+    parent->RotateLocalOX(100.0F * deltaTimeSeconds);
+    parent->RotateLocalOY(-50.0F * deltaTimeSeconds);
+
+    child->SetLocalPosition(initialChildLocal + 0.25F * std::sin(totalTime * 2.0F) * glm::vec3_up);
+    child->RotateLocalOZ(50.0F * deltaTimeSeconds);
+
+    RenderMesh(meshes.at("Box"), shaders.at("VertexNormal"), parent->GetModel());
+    RenderMesh(meshes.at("Box"), shaders.at("VertexNormal"), child->GetModel());
+
+    if (frames == 0U)
+    {
+        
+    }
+
+    ++frames;
 }
